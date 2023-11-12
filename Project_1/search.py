@@ -244,25 +244,26 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     start_node = problem.getStartState()
     action =[]
     cost = 0
-    priorityQueue.push((start_node, action, cost), cost)
+    priorityQueue.push((start_node, action, cost), heuristic(start_node, problem))
     # Khởi tạo node đầu tiên với điểm bắt đầu hành động rỗng và chi phí bằng 0
-    # Thuật toán A* xét tới chi phí nên thêm 1 biến nữa là cost
+    # Thuật toán A* xét tới chi phí nên thêm hàm heuristic - hàm tính chi phí của điểm đầu tiên
 
     visited = {} # Lưu trữ các node đã duyệt
     while not priorityQueue.isEmpty():
         node = priorityQueue.pop() # Lấy node có ưu tiên cao nhất ra khỏi hàng đợi ưu tiên
+        
         # Kiểm tra xem node đầu tiên có trùng với điểm đích không nếu có trả về action
         if problem.isGoalState(node[0]):
-            return node[1]#trả về hành động tiếp theo của node
+            return node[1]#trả về hành động tiếp theo của node, tức là đường đi
         # Nếu node chưa được thăm => Thêm node vào mảng chứa các node đã duyệt
         if node[0] not in visited:
-            visited[node[0]] = True
+            visited[node[0]] = True # Đánh đấu node đó là đã được duyệt
             #Thêm các nút kề vào queue
             for next, action, cost in problem.getSuccessors(node[0]):
                 # Kiểm tra nút này đã được duyệt chưa
                 if next and next not in visited:    
                     #Thêm node vào hàng đợi ưu tiên
-                    priorityQueue.push((next, node[1] + [action], node[2] + cost), heuristic(next, problem) + cost) 
+                    priorityQueue.push((next, node[1] + [action], node[2] + cost), node[2]+heuristic(next, problem) + cost) 
             
     util.raiseNotDefined()
 
