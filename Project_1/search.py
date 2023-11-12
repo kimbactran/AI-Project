@@ -87,6 +87,39 @@ def depthFirstSearch(problem: SearchProblem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
+    # Needed data structures
+    st = util.Stack()
+    parent = dict()
+    steps = list()
+    have_visited = set()
+
+    start_state = (problem.getStartState(), None, None)
+    st.push(start_state)
+    
+    while (not st.isEmpty()):
+        state = st.pop()
+        have_visited.add(state[0])  # Visit the current state
+
+        # Found goal state
+        if (problem.isGoalState(state[0])):
+
+            # Trace back the path and reverse it to get the correct sequence of steps
+            while (state != start_state):
+                steps.append(state[1])
+                state = parent[state]
+            
+            steps.reverse()
+            return steps
+
+        # Expand successors
+        successors = problem.getSuccessors(state[0])
+        for successor in successors:
+            if (successor[0] not in have_visited):
+                parent[successor] = state
+                st.push(successor)
+    
+    # Solution/Path does not exist
+    return None
     util.raiseNotDefined()
 
 def breadthFirstSearch(problem: SearchProblem):
@@ -148,11 +181,49 @@ def breadthFirstSearch(problem: SearchProblem):
                     #Thêm node vào hàng đợi
                     queue.push((next, node[1] + [action], node[2] + cost))   
     util.raiseNotDefined()
-
-def uniformCostSearch(problem: SearchProblem):
+def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    # Needed data structures
+    from util import PriorityQueue
+    PQ = util.PriorityQueue()
+    have_visited = set()
+
+    PQ.push((problem.getStartState(), list()), 0)
+
+    while(not PQ.isEmpty()):
+        state, path = PQ.pop()  # Take current state and path
+        have_visited.add(state)  # Visit the current state
+
+        # Found goal state
+        if (problem.isGoalState(state)): return path
+        
+        successors = problem.getSuccessors(state)
+        for successor in successors:
+
+            # Already have visited the particular node
+            if (successor[0] in have_visited): continue
+            
+            # Search to see if successor already exists in the frontier(PQ)
+            frontier_exists = False
+            for element in PQ.heap:
+                if (successor[0] == element[2][0]):
+                    frontier_exists = True
+                    break
+            
+            new_path = path + [successor[1]]
+            new_priority = problem.getCostOfActions(new_path)
+            
+            # State does not exist either in searched state nor in the frontier, insert it
+            if (not frontier_exists):
+                PQ.push((successor[0], new_path), new_priority)
+            
+            # Successor exists in the frontier with a higher path cost - update its path cost
+            elif (problem.getCostOfActions(element[2][1]) > new_priority):
+                PQ.update((successor[0], new_path), new_priority)
+    
+    # Solution/Path does not exist
+    return None
 
 def nullHeuristic(state, problem=None):
     """
