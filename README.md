@@ -22,6 +22,7 @@ Mô tả chung về các dự án, phân công công việc và kết quả đã
     - Hướng dẫn Python nhỏ
     - Phân loại dự án
   - Kết quả các bài tập 1, 2, 3:
+    
     ![image](https://github.com/kimbactran/AI-Project/assets/83815342/8cc9706d-bb3e-4ecd-a059-c09409a489e6)
 
 - [Project 1](https://inst.eecs.berkeley.edu/~cs188/sp23/projects/proj1/) Search
@@ -29,6 +30,7 @@ Mô tả chung về các dự án, phân công công việc và kết quả đã
   - Mô tả:
     Dự án 1 xây dựng các thuật toán tìm kiếm chung và áp dụng chúng vào các tình huống của Pacman
   - Kết quả bài tập từ 1 - 8:
+    
     ![image](https://github.com/kimbactran/AI-Project/assets/83815342/a262a8f4-50f6-4722-8539-248217a9b33d)
 
 - [Project 2](https://inst.eecs.berkeley.edu/~cs188/sp23/projects/proj2/) Logic and Classical Planning
@@ -41,6 +43,7 @@ Mô tả chung về các dự án, phân công công việc và kết quả đã
   - Mô tả:
     Dự án 6 giới thiệu về học máy, xây dựng một mạng lưới thần kinh để phân loại các chữ số...
   - Kết quả bài tập 1 - 4:
+    
   ![image](https://github.com/kimbactran/AI-Project/assets/83815342/88730699-f888-4421-ab4f-eda15a43c5cd)
 
 
