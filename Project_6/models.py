@@ -296,8 +296,7 @@ class LanguageIDModel(object):
         Trains the model.
         """
         "*** YOUR CODE HERE ***"
-        #while True:
-        for i in range(100):
+        while True:
             for xs, y in dataset.iterate_once(self.batch_size):
                 loss = self.get_loss(xs, y)
                 # gradient = nn.gradients(loss, [self.wx, self.bx, self.w_hidden, self.b_hidden, self.w_out, self.b_out])
