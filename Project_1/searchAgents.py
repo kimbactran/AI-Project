@@ -289,21 +289,29 @@ class CornersProblem(search.SearchProblem):
             if not startingGameState.hasFood(*corner):
                 print('Warning: no food in corner ' + str(corner))
         self._expanded = 0 # DO NOT CHANGE; Number of search nodes expanded
+        # Please add any code here which you would like to use
+        # in initializing the problem
+        "*** YOUR CODE HERE ***"
+        self.startingGameState = startingGameState
 
     def getStartState(self):
         """
-        Returns the start state (in your state space, not the full Pacman state
-        space)
+        Returns the start state (in your state space, not the full Pacman state space)
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.startingPosition, ()
+    # Trả về vị trí đầu tiên và các góc đã đi qua, vị trí đầu tiên chưa đi qua góc nào nên  góc là rỗng
 
     def isGoalState(self, state: Any):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # Kiểm tra xem có phải là đích không 
+        # => Tức là đã đi tới tất cả cấc góc, nếu corner bằng tất cả các góc đã đi tới
+        # thì tức là đã tới tích
+        if len(self.corners) != len(state[1]):
+            return False
+        return True
 
     def getSuccessors(self, state: Any):
         """
@@ -326,6 +334,22 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
+            # Set các biến:
+            x, y = state[0] # Lấy vị trí của x và y
+            visited = state[1] # Lưu các góc đã đi qua
+            dx, dy = Actions.directionToVector(action) #Khoảng cách tới nút tiếp theo
+            nextx, nexty = int(x + dx), int(y + dy)# Vị trí của nút tiếp theo
+            hitsWall = self.walls[nextx][nexty]# Kiểm tra xem có va vào tường hay không
+            if not hitsWall: #Nếu không va vào tường
+                nextState = (nextx, nexty) #Đặt nút tiếp theo có tọa độ bằng nextx, nexty
+                # Nếu nút tiếp theo nằm trong danh sách các góc và nút tiếp theo chưa nằm 
+                # danh sách góc đã đi thì thêm vào visited.
+                if nextState in self.corners and nextState not in state[1]:
+                    visited +=(nextState, ) # THêm vào danh sách các góc đã đi qua
+                # Thêm vào successors điểm vừa đến với action ở phía trên và cost bằng 1.
+                successors.append(((nextState, visited), action, 1))
+        
+
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -361,7 +385,28 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    result = 0
+    positionCurrent = state[0] #Lấy vị trí hiện tại
+    remainsCorner = [corner for corner in corners if corner not in state[1]]
+    # Lấy các góc ở trong corners và chưa đi tới tức là không nằm trong state[1]
+
+    # Lặp trong mảng chứa các góc còn lại remainsCorner
+    while len(remainsCorner) > 0:
+        #Tạo một mảng lưu khoảng cách giữa cách giữa điểm hiện tại và các góc
+        distances = [util.manhattanDistance(positionCurrent, corner) for corner in remainsCorner]
+        # Lấy khoảng cách nhỏ nhất trong mảng
+        minDistance = min(distances)
+        # Lấy ra vị trí của phần tử nhỏ nhất trong mảng
+        indexOfMinDistance = distances.index(minDistance)
+        # Đặt vị trí hiện tại bằng điểm đến tiếp theo, 
+        # Tức là điểm có góc có khoảng cách nhỏ nhất
+        positionCurrent = remainsCorner[indexOfMinDistance]
+        # Loại bỏ điểm đó ra khỏi mảng các góc chưa đi tới
+        remainsCorner.pop(indexOfMinDistance)
+        # Cộng khoảng cách nhỏ nhất vào result
+        result += minDistance
+    
+    return result # Default to trivial solution
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -455,7 +500,22 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    # Tạo mảng chứa các thức ăn
+    foods = foodGrid.asList()
+    # Tạo mảng chứa khoảng cách từ vị trí hiện tại tới các điểm thức ăn
+    distances = []
+    if len(foods) == 0: # Nếu không có thức ăn nào
+        return 0
+    # Lặp trong mảng thức ăn, lấy từng điểm
+    for food in foods:
+        # Thêm khoảng cách từ food tới position 
+        distances.append(mazeDistance(position, food, problem.startingGameState))
+    # Trả về thức ăn ở xa mình nhất
+    # Vì hàm heuristic là hàm ước lượng khoảng cách tốt nhất từ trạng thái hiện tại
+    # dến trạng thái kết thúc, tức là tất cả các điểm đã được ăn
+    # Bằng cách rả về khoảng cách lớn nhất hàm heuristic đưa ra ước lượng rằng
+    # để ăn hết tất cả các điểm thức ăn pacman sẽ phải di chuyển ít nhất một khoảng bằng khoảng cách lớn nhất.
+    return max(distances)
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -486,6 +546,10 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
+        # Hàm sẽ tìm thức ăn gần nhất và ăn nó => Đảm bảo đường đi là ngắn nhất
+        # Ở đây dùng hàm BFS hàm trả đường đi ngắn nhất vì kết quả của BFS là tìm 
+        # ra đường đi ngắn nhất từ trạng thái gốc tới trạng thái đích.
+        return search.breadthFirstSearch(problem)
         util.raiseNotDefined()
 
 class AnyFoodSearchProblem(PositionSearchProblem):
@@ -519,9 +583,11 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         The state is Pacman's position. Fill this in with a goal test that will
         complete the problem definition.
         """
-        x,y = state
+        x,y = state # Tọa độ của Pacman trên một lưới
 
         "*** YOUR CODE HERE ***"
+        # Trả về xem state có tọa độ nằm trên lưới thức ăn hay không
+        return self.food[x][y]
         util.raiseNotDefined()
 
 def mazeDistance(point1: Tuple[int, int], point2: Tuple[int, int], gameState: pacman.GameState) -> int:
