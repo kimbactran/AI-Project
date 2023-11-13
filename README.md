@@ -8,8 +8,8 @@ Chi tiết khóa học tại: https://inst.eecs.berkeley.edu/~cs188/sp23/
 Nhóm sinh viên thực hiện - Nhóm 10:
 - Nguyễn Thị Phương Thảo - 19020631
 - Nguyễn Văn Hào - 21020714
-- Nguyễn Xuân Quang - 20030463
-- Trần Thị Kim Bắc - 200203066
+- Nguyễn Xuân Quang - 20020463
+- Trần Thị Kim Bắc - 20020366
 
 --------
 Mô tả chung về các dự án, phân công công việc và kết quả đã thực hiện:
