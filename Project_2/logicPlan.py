@@ -96,8 +96,9 @@ def findModelUnderstandingCheck() -> Dict[Expr, bool]:
     """
     a = Expr('A')
     "*** BEGIN YOUR CODE HERE ***"
+    a.op = a.op.lower()
     print("a.__dict__ is:", a.__dict__) # might be helpful for getting ideas
-    util.raiseNotDefined()
+    return {a:True}
     "*** END YOUR CODE HERE ***"
 
 def entails(premise: Expr, conclusion: Expr) -> bool:
@@ -361,6 +362,62 @@ def foodLogicPlan(problem) -> List:
 #______________________________________________________________________________
 # QUESTION 6
 
+def add_to_KB(agent, KB, t, all_coords, non_outer_wall_coords, map, Axioms, SuccessorAxioms, rules):
+    '''
+    Add pacphysics, action, and percept information to KB
+    '''
+
+    # Add to KB: pacphysics_axioms. Use sensorAxioms and allLegalSuccessorAxioms for localization and mapping, 
+    # and SLAMSensorAxioms and SLAMSuccessorAxioms for SLAM only
+    KB.append(pacphysicsAxioms(t, all_coords, non_outer_wall_coords, map, Axioms, SuccessorAxioms))
+    
+    # Add to KB: Pacman takes action prescribed by agent.actions[t]
+    KB.append(logic.PropSymbolExpr(agent.actions[t], time = t))
+    
+    # Get the percepts by calling agent.getPercepts() and pass the percepts to fourBitPerceptRules(...) for localization and mapping, or numAdjWallsPerceptRules(...) for SLAM.
+    # Add the resulting percept_rules to KB
+    KB.append(rules)
+
+
+def find_pac_location(KB, t, coord, possible_loc):
+    '''
+    Tìm vị trí có thể của pacman và update KB
+    '''
+    
+    cKB = logic.conjoin(KB)
+    pacman_loc = logic.PropSymbolExpr(pacman_str, coord[0], coord[1], time = t)
+    
+    # Nếu tồn tại phép logic thỏa mãn Pacman ở (x, y) tại thời điểm t, thêm (x, y) vào possible_locations
+    if (findModel(cKB & pacman_loc)):
+        possible_loc.append((coord[0], coord[1]))
+    
+    # Add to KB: vị trí (x, y) mà pac đang có mặt, tại thời điểm t
+    elif (entails(cKB, pacman_loc)):
+        KB.append(pacman_loc)
+    
+    # Add to KB: vị trí (x, y) mà pac ko có mặt, tại thời điểm t
+    else:
+        KB.append(~pacman_loc)
+
+
+def find_wall(KB, coord, map):
+    '''
+    Find provable wall locations with updated KB
+    '''
+    
+    wall_exists = logic.PropSymbolExpr(wall_str, coord[0], coord[1])
+    cKB = logic.conjoin(KB)
+    
+    # Add to KB and update known_map: vị trí (x, y) có tường
+    if entails(cKB, wall_exists):                
+        KB.append(wall_exists)
+        map[coord[0]][coord[1]] = 1
+    
+    # Add to KB and update known_map: vị trí (x, y) ko có tường
+    elif entails(cKB, ~wall_exists):
+        KB.append(~wall_exists)
+        map[coord[0]][coord[1]] = 0
+#_______________________________________________________________________________
 def localization(problem, agent) -> Generator:
     '''
     problem: a LocalizationProblem instance
@@ -374,10 +431,26 @@ def localization(problem, agent) -> Generator:
     KB = []
 
     "*** BEGIN YOUR CODE HERE ***"
-    util.raiseNotDefined()
-
+    for coord in all_coords:
+        wall = logic.PropSymbolExpr(wall_str, coord[0], coord[1])
+        if (coord in walls_list): 
+            KB.append(wall)
+        else: 
+            KB.append(~wall)
+    
     for t in range(agent.num_timesteps):
         "*** END YOUR CODE HERE ***"
+        # Add pacphysics, action, and percept information to KB
+        rule = fourBitPerceptRules(t, agent.getPercepts())
+        add_to_KB(agent, KB, t, all_coords, non_outer_wall_coords, walls_grid, sensorAxioms, allLegalSuccessorAxioms, rule)
+
+        # Find possible pacman locations with updated KB
+        possible_locations = list()
+        for wall in non_outer_wall_coords:
+            find_pac_location(KB, t, wall, possible_locations)
+
+        # Call agent.moveToNextState(action_t) on the current agent action at timestep t
+        agent.moveToNextState(agent.actions[t])
         yield possible_locations
 
 #______________________________________________________________________________
@@ -406,10 +479,24 @@ def mapping(problem, agent) -> Generator:
     KB.append(conjoin(outer_wall_sent))
 
     "*** BEGIN YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # Get initial location (pac_x_0, pac_y_0) of Pacman, and add this to KB
+    KB.append(logic.PropSymbolExpr(pacman_str, pac_x_0, pac_y_0, time = 0))
+    
+    # Add whether there is a wall at that location
+    KB.append(~logic.PropSymbolExpr(wall_str, pac_x_0, pac_y_0))
 
     for t in range(agent.num_timesteps):
         "*** END YOUR CODE HERE ***"
+        # Add pacphysics, action, and percept information to KB
+        rule = fourBitPerceptRules(t, agent.getPercepts())
+        add_to_KB(agent, KB, t, all_coords, non_outer_wall_coords, known_map, sensorAxioms, allLegalSuccessorAxioms, rule)
+
+        # Find provable wall locations with updated KB
+        for wall in non_outer_wall_coords:
+            find_wall(KB, wall, known_map)
+        
+        # Call agent.moveToNextState(action_t) on the current agent action at timestep t
+        agent.moveToNextState(agent.actions[t])
         yield known_map
 
 #______________________________________________________________________________
@@ -465,11 +552,9 @@ def slam(problem, agent) -> Generator:
     # Thực hiện các bước tiếp theo cho mỗi thời điểm trong quá trình thực hiện
     for t in range(agent.num_timesteps):
         # Thêm giả định vật lý hành động và thông tin nhận thức vào tập tri thức KB.
-        KB.append(pacphysicsAxioms(t, all_coords, non_outer_wall_coords, known_map, SLAMSensorAxioms, SLAMSuccessorAxioms))
-        # THêm biểu thức logic vào KB để biểu diễn hành động của pacman tại thời điểm t - t là tham số thời gian
-        KB.append(logic.PropSymbolExpr(agent.actions[t], time = t))
-        # Thêm các quy tắc liên quan tới số lượng tường lân cận vào KB
-        KB.append(numAdjWallsPerceptRules(t, agent.getPercepts()))
+        rule = numAdjWallsPerceptRules(t, agent.getPercepts())
+        add_to_KB(agent, KB, t, all_coords, non_outer_wall_coords, known_map, SLAMSensorAxioms, SLAMSuccessorAxioms, rule)
+        
         # Khởi tạo danh sách rỗng lưu các vị trí có thẻ của Pacman tịa thời điểm t
         possibles = list()
         # Lặp qua các tọa độ của cá ô tường không nằm ở viền bản đồ
