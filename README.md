@@ -38,6 +38,9 @@ Mô tả chung về các dự án, phân công công việc và kết quả đã
   - Mô tả: 
     Dự án 2 xây dựng các hàm Python đơn giản để tạo ra các câu logic mô tả vật lý Pacman, sau đó sử dụng bộ giải SAT, pycosat để giải quyết các nhiệm vụ suy luận logic liên quan đến việc lập kế hoạch, lập bản đồ, Pacman và SLAM
   - Kết quả bài tập từ 1 - 8:
+ 
+    ![image](https://github.com/kimbactran/AI-Project/assets/83815342/e6daa9d2-06bd-4db3-a512-614e99357f52)
+
 - [Project 6](https://inst.eecs.berkeley.edu/~cs188/sp23/projects/proj6) Machine Learning
   - Sinh viên thực hiện: Thảo
   - Mô tả:
